@@ -1,6 +1,6 @@
 # shadowsocks-lab
 
-Simplified shadowsocks.
+Simplified shadowsocks base on https://pypi.python.org/pypi/shadowsocks.
 
 ## how to use
 
