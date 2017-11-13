@@ -353,16 +353,19 @@ class TcpRelay(object):
         loop.add(self._listen_sock, EVENT_READ, (self, self.accept))
 
     def _accept(self, listen_sock):
-        try:
-            sock, addr = listen_sock.accept()
-        except (OSError, IOError) as e:
-            if errno_from_exception(e) in (
-                errno.EAGAIN, errno.EWOULDBLOCK, errno.EINPROGRESS,
-                errno.EINTR, errno.ECONNABORTED
-            ):
-                pass
-            else:
-                raise
+        while True:
+            try:
+                sock, addr = listen_sock.accept()
+            except (OSError, IOError) as e:
+                err = errno_from_exception(e)
+                if err == errno.EINTR:
+                    pass
+                elif err in (errno.EAGAIN, errno.EWOULDBLOCK,
+                             errno.EINPROGRESS, errno.ECONNABORTED):
+                    break
+                else:
+                    raise
+
         logging.info('Connected from {}:{}'.format(*addr))
         sock.setblocking(False)
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
