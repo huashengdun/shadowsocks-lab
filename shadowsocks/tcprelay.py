@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function, \
 import errno
 import logging
 import socket
+import traceback
 
 from shadowsocks.selectors import (EVENT_READ, EVENT_WRITE, EVENT_ERROR,
                                    errno_from_exception, get_sock_error)
@@ -40,7 +41,7 @@ class TcpRelayHanler(object):
         self._local_addr = local_addr
         self._remote_addr = remote_addr
         # self._crypt = None
-        self._crypt = encrypt.Encryptor(b'PassThrouthGFW', 'aes-256-cfb')
+        self._crypt = encrypt.Encryptor(b'PassThroughGFW', 'aes-256-cfb')
         self._dns_resolver = dns_resolver
         self._remote_sock = None
         self._local_sock_mode = 0
@@ -57,7 +58,7 @@ class TcpRelayHanler(object):
             try:
                 call(sock, event, *args)
             except Exception as e:
-                logging.error(e)
+                logging.error(traceback.format_exc())
                 self.close()
 
     def __del__(self):
@@ -103,7 +104,8 @@ class TcpRelayHanler(object):
                 err = errno_from_exception(e)
                 if err == errno.EINTR:
                     pass
-                elif err == errno.EINPROGRESS:
+                elif err in (errno.EINPROGRESS, errno.EAGAIN,
+                             errno.EWOULDBLOCK):
                     break
                 else:
                     raise
