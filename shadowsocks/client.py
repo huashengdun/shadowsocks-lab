@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, \
     with_statement
 
+import json
 import logging
 import os
 import sys
@@ -18,13 +19,17 @@ FORMATTER = '%(asctime)s - %(levelname)s - %(message)s'
 LOGGING_LEVEL = logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format=FORMATTER)
 
-LISTEN_ADDR = ('127.0.0.1', 1080)
-REMOTE_ADDR = ('127.0.0.1', 9000)
 
+def main(config_file='config.json'):
+    config = json.load(open(config_file))
+    listen_addr = (config['local_address'], config['local_port'])
+    remote_addr = (config['server'], config['server_port'])
+    method = config['method']
+    password = config['password']
 
-def main():
     loop = EventLoop()
-    relay = TcpRelay(TcpRelayClientHanler, LISTEN_ADDR, REMOTE_ADDR)
+    relay = TcpRelay(TcpRelayClientHanler, listen_addr, method, password,
+                     remote_addr)
     relay.add_to_loop(loop)
     loop.run()
 

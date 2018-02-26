@@ -34,14 +34,14 @@ def create_sock(ip, port):
 
 class TcpRelayHanler(object):
 
-    def __init__(self, local_sock, local_addr, remote_addr=None,
-                 dns_resolver=None):
+    def __init__(self, local_sock, local_addr, method, password,
+                 remote_addr=None, dns_resolver=None):
         self._loop = None
         self._local_sock = local_sock
         self._local_addr = local_addr
         self._remote_addr = remote_addr
         # self._crypt = None
-        self._crypt = encrypt.Encryptor(b'PassThroughGFW', 'aes-256-cfb')
+        self._crypt = encrypt.Encryptor(password.encode('utf-8'), method)
         self._dns_resolver = dns_resolver
         self._remote_sock = None
         self._local_sock_mode = 0
@@ -329,11 +329,13 @@ class TcpRelayServerHandler(TcpRelayHanler):
 
 class TcpRelay(object):
 
-    def __init__(self, handler_type, listen_addr, remote_addr=None,
-                 dns_resolver=None):
+    def __init__(self, handler_type, listen_addr, method, password,
+                 remote_addr=None, dns_resolver=None):
         self._loop = None
         self._handler_type = handler_type
         self._listen_addr = listen_addr
+        self._method = method
+        self._password = password
         self._remote_addr = remote_addr
         self._dns_resolver = dns_resolver
         self._create_listen_sock()
@@ -373,8 +375,8 @@ class TcpRelay(object):
 
     def accept(self, listen_sock, event):
         sock, addr = self._accept(listen_sock)
-        handler = self._handler_type(sock, addr, self._remote_addr,
-                                     self._dns_resolver)
+        handler = self._handler_type(sock, addr, self._method, self._password,
+                                     self._remote_addr, self._dns_resolver)
         handler.add_to_loop(self._loop)
 
     def close(self):
@@ -388,5 +390,6 @@ class TcpRelay(object):
             try:
                 call(sock, event, *args)
             except Exception as e:
-                logging.error(e)
+                # logging.error(e)
                 self.close()
+                raise
