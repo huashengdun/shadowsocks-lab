@@ -390,6 +390,6 @@ class TcpRelay(object):
             try:
                 call(sock, event, *args)
             except Exception as e:
-                # logging.error(e)
+                logging.error(e)
                 self.close()
-                raise
+                # raise
