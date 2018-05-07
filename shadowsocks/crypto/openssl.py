@@ -49,6 +49,11 @@ def load_openssl():
     libcrypto.EVP_CipherUpdate.argtypes = (c_void_p, c_void_p, c_void_p,
                                            c_char_p, c_int)
 
+    try:
+        libcrypto.EVP_CIPHER_CTX_cleanup = libcrypto.EVP_CIPHER_CTX_reset
+    except AttributeError:
+        pass
+
     libcrypto.EVP_CIPHER_CTX_cleanup.argtypes = (c_void_p,)
     libcrypto.EVP_CIPHER_CTX_free.argtypes = (c_void_p,)
     if hasattr(libcrypto, 'OpenSSL_add_all_ciphers'):
